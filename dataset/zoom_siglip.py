@@ -12,9 +12,12 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from diffusers import AutoencoderDC, SanaPipeline
+import pandas as pd  # add near the top of your file if not already imported
+
 
 DEVICE = "mps" if torch.backends.mps.is_available() else "cuda"
 print(f"[device] {DEVICE} | torch={torch.__version__}")
+
 
 # ============================================================
 # 1) Basic image + latent cache datasets (unchanged)
@@ -385,6 +388,357 @@ class ZoomLatentOneClassDataset(Dataset):
 
         return out
 
+class ZoomLatentMultiClassDataset(Dataset):
+    """
+    Multi-class version of ZoomLatentOneClassDataset.
+
+    Differences:
+      * Takes `labels_path` (CSV) instead of a single `instance_prompt`.
+      * Expects a per-object text prompt in the CSV.
+      * Builds a text-encoding cache directory with one file per object.
+      * __getitem__ returns the text encoding for the correct object.
+
+    Expected CSV schema:
+      - column 'object' : folder name under `root`
+      - column 'label'  : text prompt for that object
+        (if 'label' is missing, will try 'prompt')
+
+    Folder layout:
+        root/
+          obj_1/
+            zoom_0.png
+            zoom_1.png
+            ...
+          obj_2/
+            zoom_0.png
+            zoom_3.png
+            ...
+    """
+
+    def __init__(
+        self,
+        root: Path,
+        cache_dir: Path,
+        vae: AutoencoderDC,
+        text_pipe: SanaPipeline,
+        labels_path: Path,
+        text_cache_dir: Path,
+        siglip_cache_dir: Optional[Path] = None,
+        zoom_pattern: str = r"zoom_(\d+)",
+        exts: Sequence[str] = (".png", ".jpg", ".jpeg", ".webp"),
+        max_sequence_length: int = 300,
+        always_zero_org: bool = True,
+        allow_same_zoom: bool = False,
+    ):
+        super().__init__()
+        self.root = Path(root)
+        self.cache_dir = Path(cache_dir)
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+        self.labels_path = Path(labels_path)
+        self.text_cache_dir = Path(text_cache_dir)
+        self.text_cache_dir.mkdir(parents=True, exist_ok=True)
+
+        self._zoom_re = re.compile(zoom_pattern)
+        self.exts = {e.lower() for e in exts}
+        self.always_zero_org = always_zero_org
+        self.allow_same_zoom = allow_same_zoom
+
+        # -------- 0) load labels CSV --------
+        df = pd.read_csv(self.labels_path)
+        if "object" not in df.columns:
+            raise ValueError(f"CSV {self.labels_path} must contain an 'object' column.")
+        if "label" in df.columns:
+            label_col = "label"
+        elif "prompt" in df.columns:
+            label_col = "prompt"
+        else:
+            raise ValueError(
+                f"CSV {self.labels_path} must contain either 'label' or 'prompt' column."
+            )
+
+        self.obj_to_prompt = {
+            str(row["object"]): str(row[label_col]).strip()
+            for _, row in df.iterrows()
+            if pd.notna(row["object"]) and pd.notna(row[label_col])
+        }
+
+        # Optional SigLIP cache
+        if siglip_cache_dir is not None:
+            self.siglip_cache_dir = Path(siglip_cache_dir)
+            self.siglip_cache_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            self.siglip_cache_dir = None
+
+        # ---------- 1) scan zoom dirs ----------
+        self.objects: List[Dict[str, Any]] = []
+        self.items_flat: List[Dict[str, Any]] = []
+        gi_counter = 0
+
+        obj_dirs = [d for d in sorted(self.root.iterdir()) if d.is_dir()]
+        for obj_dir in obj_dirs:
+            obj_name = obj_dir.name
+
+            # Skip objects with no label
+            if obj_name not in self.obj_to_prompt:
+                print(f"[ZoomLatentMultiClassDataset] skipping '{obj_name}' (no label in CSV)")
+                continue
+
+            zoom_items: List[Tuple[float, int]] = []  # (zoom, gi)
+
+            for p in sorted(obj_dir.iterdir()):
+                if p.suffix.lower() not in self.exts:
+                    continue
+                m = self._zoom_re.search(p.stem)
+                if not m:
+                    continue
+                z = float(m.group(1))
+
+                self.items_flat.append(
+                    {
+                        "gi": gi_counter,
+                        "path": p,
+                        "zoom": z,
+                        "obj_name": obj_name,
+                    }
+                )
+                zoom_items.append((z, gi_counter))
+                gi_counter += 1
+
+            if len(zoom_items) == 0:
+                continue
+
+            zoom_items.sort(key=lambda x: x[0])
+            if self.always_zero_org:
+                levels = [z for z, _ in zoom_items]
+                if 0.0 not in levels:
+                    # require zoom_0 for this object
+                    continue
+
+            self.objects.append(
+                {
+                    "name": obj_name,
+                    "items": zoom_items,  # list[(zoom, gi)]
+                }
+            )
+
+        if not self.objects:
+            raise ValueError(
+                f"No valid objects (with zoom_* images and labels) in {self.root}"
+            )
+
+        print(
+            f"[ZoomLatentMultiClassDataset] objects={len(self.objects)}, "
+            f"single-images={len(self.items_flat)}"
+        )
+
+        # ---------- 2) latent cache ----------
+        self._ensure_latent_cache(vae)
+
+        # ---------- 3) per-object text encodings ----------
+        self._ensure_text_cache(text_pipe, max_sequence_length)
+
+        # Optional: sanity check SigLIP cache
+        if self.siglip_cache_dir is not None:
+            missing = [
+                item for item in self.items_flat
+                if not self._siglip_path(item["gi"]).exists()
+            ]
+            if missing:
+                print(
+                    f"[warning] {len(missing)} SigLIP embeddings missing under "
+                    f"{self.siglip_cache_dir}"
+                )
+            else:
+                print(
+                    f"[siglip-cache] found all {len(self.items_flat)} embeddings in "
+                    f"{self.siglip_cache_dir.name}"
+                )
+
+    def __len__(self) -> int:
+        return len(self.objects)  # one index per object
+
+    # ----- latent cache helpers (same pattern as OneClass) -----
+
+    def _latent_path(self, gi: int) -> Path:
+        return self.cache_dir / f"{gi:07d}.pt"
+
+    @torch.no_grad()
+    def _ensure_latent_cache(self, vae: AutoencoderDC):
+        from torchvision import transforms  # make sure it's imported at top
+
+        missing = [
+            item for item in self.items_flat
+            if not self._latent_path(item["gi"]).exists()
+        ]
+        if not missing:
+            print(
+                f"[latent-cache] found all {len(self.items_flat)} latents in "
+                f"{self.cache_dir.name}"
+            )
+            return
+
+        print(f"[latent-cache] building {len(missing)} latents -> {self.cache_dir}")
+        vae = vae.to(DEVICE, dtype=torch.float32).eval()
+
+        for item in tqdm(missing, desc="[latent-cache] encoding"):
+            gi = item["gi"]
+            path: Path = item["path"]
+
+            img = Image.open(path).convert("RGB")
+            x = transforms.ToTensor()(img)
+            x = transforms.Normalize([0.5, 0.5, 0.5],
+                                     [0.5, 0.5, 0.5])(x)
+            x = x.unsqueeze(0).to(DEVICE, dtype=torch.float32)
+
+            lat = vae.encode(x).latent.float() * float(vae.config.scaling_factor)
+            payload = {"latent": lat[0].half().cpu()}
+            torch.save(payload, self._latent_path(gi))
+
+        print("[latent-cache] done.")
+
+    # ----- SigLIP cache helper -----
+
+    def _siglip_path(self, gi: int) -> Path:
+        assert self.siglip_cache_dir is not None
+        return self.siglip_cache_dir / f"{gi:07d}.pt"
+
+    # ----- text encoding cache helpers -----
+
+    def _text_path(self, obj_name: str) -> Path:
+        # one file per object
+        safe = obj_name.replace("/", "_")
+        return self.text_cache_dir / f"{safe}.pt"
+
+    @torch.no_grad()
+    def _ensure_text_cache(
+        self,
+        text_pipe: SanaPipeline,
+        max_sequence_length: int,
+    ):
+        """
+        Use SanaPipeline.encode_prompt once per object's label and cache to disk.
+
+        Each file stores:
+          - "pe"   : [1,T,D] float32
+          - "pam"  : [1,T]   attention mask
+          - "text" : original prompt string
+        """
+        missing = []
+        for obj in self.objects:
+            obj_name = obj["name"]
+            if not self._text_path(obj_name).exists():
+                missing.append(obj_name)
+
+        if not missing:
+            print(
+                f"[text-cache] found encodings for all {len(self.objects)} objects "
+                f"in {self.text_cache_dir.name}"
+            )
+            return
+
+        print(f"[text-cache] building encodings for {len(missing)} objects...")
+        text_pipe = text_pipe.to(DEVICE)
+
+        for obj_name in tqdm(missing, desc="[text-cache] encoding"):
+            prompt = self.obj_to_prompt[obj_name]
+
+            prompt_embeds, prompt_attention_mask, _, _ = text_pipe.encode_prompt(
+                prompt=prompt,
+                do_classifier_free_guidance=False,
+                max_sequence_length=max_sequence_length,
+            )
+
+            payload = {
+                "pe": prompt_embeds.cpu(),          # [1,T,D]
+                "pam": prompt_attention_mask.cpu(), # [1,T]
+                "text": prompt,
+            }
+            torch.save(payload, self._text_path(obj_name))
+
+        # Free heavy parts from pipeline to save RAM
+        try:
+            del text_pipe.text_encoder, text_pipe.tokenizer
+            del text_pipe.transformer, text_pipe.vae
+        except Exception:
+            pass
+        gc.collect()
+        print("[text-cache] done.")
+
+    # ----- choose zoom pair (same as OneClass) -----
+
+    def _choose_zoom_pair(
+        self,
+        zoom_items: List[Tuple[float, int]],
+    ) -> Tuple[float, int, float, int]:
+        levels = [z for z, _ in zoom_items]
+        z_to_gi = {z: gi for z, gi in zoom_items}
+
+        if self.always_zero_org:
+            zoom_org = 0.0
+            gi_org = z_to_gi[zoom_org]
+            if self.allow_same_zoom:
+                zoom_target = random.choice(levels)
+            else:
+                candidates = [z for z in levels if z != zoom_org]
+                zoom_target = random.choice(candidates)
+            gi_target = z_to_gi[zoom_target]
+        else:
+            if self.allow_same_zoom:
+                zoom_org = random.choice(levels)
+                zoom_target = random.choice(levels)
+                gi_org = z_to_gi[zoom_org]
+                gi_target = z_to_gi[zoom_target]
+            else:
+                z1, z2 = random.sample(levels, 2)
+                zoom_org, zoom_target = z1, z2
+                gi_org = z_to_gi[zoom_org]
+                gi_target = z_to_gi[zoom_target]
+
+        return zoom_org, gi_org, zoom_target, gi_target
+
+    # ----- __getitem__ -----
+
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        obj = self.objects[idx]
+        obj_name = obj["name"]
+        zoom_items = obj["items"]
+
+        zoom_org, gi_org, zoom_target, gi_target = self._choose_zoom_pair(zoom_items)
+
+        pack_org = torch.load(self._latent_path(gi_org), map_location="cpu")
+        pack_target = torch.load(self._latent_path(gi_target), map_location="cpu")
+
+        latent_org = pack_org["latent"]
+        latent_target = pack_target["latent"]
+
+        # normalized zooms (0–9 -> [0,1] if you keep /9.0)
+        zoom_org_t = torch.tensor([zoom_org], dtype=torch.float32) / 9.0
+        zoom_target_t = torch.tensor([zoom_target], dtype=torch.float32) / 9.0
+
+        # load per-object text encoding
+        text_pack = torch.load(self._text_path(obj_name), map_location="cpu")
+        pe = text_pack["pe"]   # [1,T,D]
+        pam = text_pack["pam"] # [1,T]
+        prompt = text_pack["text"]
+
+        out = {
+            "latent_org_zoom": latent_org,
+            "latent_target_zoom": latent_target,
+            "zoom_org": zoom_org_t,
+            "zoom_target": zoom_target_t,
+            "processed_text_condition": prompt,
+            "text_encoding_pe": pe,
+            "text_encoding_pam": pam,
+        }
+
+        if self.siglip_cache_dir is not None:
+            siglip_org = torch.load(self._siglip_path(gi_org), map_location="cpu")["embedding"]
+            siglip_tgt = torch.load(self._siglip_path(gi_target), map_location="cpu")["embedding"]
+            out["siglip_org_embed"] = siglip_org
+            out["siglip_target_embed"] = siglip_tgt
+
+        return out
 
 # ============================================================
 # 3) Simple __main__ to test dataset with SANA1.5_1.6B
