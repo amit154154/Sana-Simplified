@@ -104,10 +104,16 @@ class SanaZoomLoRA(pl.LightningModule):
 
         # zoom conditioning: [zoom_org, zoom_target, delta] → zoom TOKEN in text space
         text_hidden_dim = 2304  # Sana 1.5 text dimension
-        self.zoom_proj = nn.Linear(3, text_hidden_dim)
-        nn.init.zeros_(self.zoom_proj.weight)
-        nn.init.zeros_(self.zoom_proj.bias)
+        self.zoom_proj = nn.Sequential(
+            nn.Linear(3, 128),
+            nn.SiLU(),
+            nn.Linear(128, text_hidden_dim),
+            nn.LayerNorm(text_hidden_dim),
+        )
 
+        last_linear = self.zoom_proj[2]  # index 2 = nn.Linear(128, text_hidden_dim)
+        nn.init.zeros_(last_linear.weight)
+        nn.init.zeros_(last_linear.bias)
         # optional SigLIP projection → text dimension (also appended as a token)
         self.siglip_proj = None
         if siglip_dim is not None:
@@ -338,6 +344,7 @@ class SanaZoomLoRA(pl.LightningModule):
         """
         Sampling with the *official* FlowMatchEulerDiscreteScheduler:
           - For each zoom_target:
+            * reuse the SAME initial noise
             * clone the inference scheduler (fresh _step_index)
             * set timesteps
             * run a standard FM sampling loop
@@ -353,8 +360,8 @@ class SanaZoomLoRA(pl.LightningModule):
         device = self.device
         dtype = self.transformer.dtype
 
-        base_pe = self._ex_pe0.to(device)  # [1,T,D]
-        base_pam = self._ex_pam0.to(device)  # [1,T]
+        base_pe = self._ex_pe0.to(device)   # [1,T,D]
+        base_pam = self._ex_pam0.to(device) # [1,T]
         zo = torch.tensor([[self._ex_zo]], device=device, dtype=torch.float32)  # [1,1]
 
         # zooms we want to visualize (still in normalized space 0..1)
@@ -365,10 +372,15 @@ class SanaZoomLoRA(pl.LightningModule):
         wandb_images = []
         B_panel = 1  # one sample per zoom
 
+        # --------- SAME NOISE FOR ALL ZOOMS ---------
+        _, c, h, w = self._ex_latent_shape
+        base_noise = torch.randn((B_panel, c, h, w), device=device, dtype=dtype)
+        # --------------------------------------------
+
         for zt_val in zoom_targets.tolist():
             zt = torch.tensor([[zt_val]], device=device, dtype=torch.float32)  # [1,1]
 
-            pe = base_pe.clone()  # [1,T,D]
+            pe = base_pe.clone()    # [1,T,D]
             pam = base_pam.clone()  # [1,T]
 
             # append zoom token
@@ -387,9 +399,8 @@ class SanaZoomLoRA(pl.LightningModule):
             infer_scheduler.set_timesteps(self.num_sample_steps, device=device)
             timesteps = infer_scheduler.timesteps  # [num_steps]
 
-            # latents ~ N(0, I) in Sana latent space
-            _, c, h, w = self._ex_latent_shape
-            latents = torch.randn((B_panel, c, h, w), device=device, dtype=dtype)
+            # start FROM THE SAME NOISE for each zoom
+            latents = base_noise.clone()
 
             # main flow-matching sampling loop
             for t in timesteps:
@@ -440,7 +451,6 @@ class SanaZoomLoRA(pl.LightningModule):
                 )
             except Exception:
                 pass
-
     # --------------------------
     # cache a reference example + log ref image once
     # --------------------------
