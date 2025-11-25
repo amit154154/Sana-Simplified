@@ -12,10 +12,8 @@ The base model is originally trained for higher resolutions (e.g. 480p), so its 
 
 By training only the video transformer with a Tom & Jerry–style class prompt and LoRA adapters, the model progressively adapts its **visual style, color palette, and motion dynamics** toward the target domain.
 
-### Qualitative samples
-
 | Checkpoint                  | Sample video |
 |----------------------------|--------------|
-| Zero-shot (no fine-tuning) | <video src="https://github.com/amit154154/tomjerry-sana/raw/main/assets/tom_and_jerry_sanavideo/tomjerry_sample_zero_shot.mp4" controls width="320"></video>|
-| LoRA – after 100 steps     | <video src="assets/tom_and_jerry_sanavideo/tomjerry_lora_sample_step100.mp4?raw=1" controls width="320"></video> |
-| LoRA – after 200 steps     | <video src="assets/tom_and_jerry_sanavideo/tomjerry_lora_sample_step200.mp4?raw=1" controls width="320"></video> |
+| Zero-shot (no fine-tuning) | [![Zero-shot sample](assets/tom_and_jerry_sanavideo/tomjerry_sample_zero_shot_thumb.png)](assets/tom_and_jerry_sanavideo/tomjerry_sample_zero_shot.mp4) |
+| LoRA – after 100 steps     | [![Step 100](assets/tom_and_jerry_sanavideo/tomjerry_lora_sample_step100_thumb.png)](assets/tom_and_jerry_sanavideo/tomjerry_lora_sample_step100.mp4) |
+| LoRA – after 200 steps     | [![Step 200](assets/tom_and_jerry_sanavideo/tomjerry_lora_sample_step200_thumb.png)](assets/tom_and_jerry_sanavideo/tomjerry_lora_sample_step200.mp4) |
