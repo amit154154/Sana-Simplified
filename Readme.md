@@ -14,8 +14,8 @@ By training only the video transformer with a Tom & Jerry–style class prompt a
 
 ### Qualitative samples
 
-| Checkpoint                | Sample video |
-|---------------------------|--------------|
-| Zero-shot (no fine-tuning) | <video src="assets/tom_and_jerry_sanavideo/tomjerry_sample_zero_shot.mp4" controls width="320"></video> |
-| LoRA – after 100 steps     | <video src="assets/tom_and_jerry_sanavideo/tomjerry_lora_sample_step100.mp4" controls width="320"></video> |
-| LoRA – after 200 steps     | <video src="assets/tom_and_jerry_sanavideo/tomjerry_lora_sample_step200.mp4" controls width="320"></video> |
+| Checkpoint                  | Sample video |
+|----------------------------|--------------|
+| Zero-shot (no fine-tuning) | <video src="https://github.com/amit154154/tomjerry-sana/raw/main/assets/tom_and_jerry_sanavideo/tomjerry_sample_zero_shot.mp4" controls width="320"></video>|
+| LoRA – after 100 steps     | <video src="assets/tom_and_jerry_sanavideo/tomjerry_lora_sample_step100.mp4?raw=1" controls width="320"></video> |
+| LoRA – after 200 steps     | <video src="assets/tom_and_jerry_sanavideo/tomjerry_lora_sample_step200.mp4?raw=1" controls width="320"></video> |
