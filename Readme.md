@@ -10,13 +10,15 @@ It currently includes **prototype code**, **one-off experiments**, and **work-in
 This experiment fine-tunes **SANA-Video (2B)** with **LoRA** on a dataset of _Tom and Jerry_ clips resized to **224×224**.  
 The base model is originally trained for higher resolutions (e.g. 480p), so its **zero-shot** generations at 224×224 are:
 
-- off-style compared to classic 2D slapstick cartoons  
-- less consistent in line art, color palette, and motion
+-- off-style compared to classic 2D slapstick cartoons  
+-- less consistent in line art, color palette, and motion
+ 
 ---
 
 ### Training Setup
 
 #### Objective
+> 🔗 LoRA checkpoint on Hugging Face: [sanavideo-tomjerry-lora-r16-v1](https://huggingface.co/AmitIsraeli/sanavideo-tomjerry-lora-r16-v1)
 
 - Start from **base SANA-Video 2B**  
 - Freeze everything except **LoRA adapters on all linear layers in the diffusion transforme**  
@@ -74,7 +76,7 @@ All of these samples live in:
 | 7,500  | ![Step 7.5k](assets/tom_and_jerry_all_assets/tomjerry_video_class_lora16_seed69420_cfg4/tomjerry_lora_step007500_seed69420.gif) |
 | 10,000 | ![Step 10k](assets/tom_and_jerry_all_assets/tomjerry_video_class_lora16_seed69420_cfg4/tomjerry_lora_step010000_seed69420.gif) |
 
-when all examples are from seed 69420 and the sane class prompt  
+when all examples are from seed 69420 and the same class prompt  
 
 ---
 
