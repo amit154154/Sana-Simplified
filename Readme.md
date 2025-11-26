@@ -102,5 +102,6 @@ TBD
 
 ### Next Steps:
 
-1. explore adding aditinoal labels and control using vlm on clips creating a pardigdm prompt - in it explore ability to video - text - video
-2. explore distilation , pruning, effect of sample steps to metrics etc ...
+1.	Characterize training stability: Run a 15k-step LoRA-64 experiment (LR = 1e-4 with warmup) to study the early-step loss explosion and compare dynamics against the original LoRA-16 run.
+2.	VLM-driven control & labeling: Use a vision–language model to auto-label clips with richer descriptions and control tags, and design a prompt paradigm for video → text → video conditioning.
+3.	Model compression & sampling study: Systematically evaluate distillation, pruning, and different sampling-step budgets, measuring their impact on quality and downstream metrics.
