@@ -18,7 +18,8 @@ The base model is originally trained for higher resolutions (e.g. 480p), so its 
 ### Training Setup
 
 #### Objective
-> 🔗 LoRA checkpoint on Hugging Face: [sanavideo-tomjerry-lora-r16-v1](https://huggingface.co/AmitIsraeli/sanavideo-tomjerry-lora-r16-v1)
+[![Hugging Face – sanavideo-tomjerry-lora-r16-v1](https://img.shields.io/badge/HuggingFace-sanavideo--tomjerry--lora--r16--v1-ffcc4d?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/AmitIsraeli/sanavideo-tomjerry-lora-r16-v1)  
+[![Weights & Biases – Tom & Jerry Runs](https://img.shields.io/badge/Weights_&_Biases-Tom_%26_Jerry%20Runs-2c8ebb?style=for-the-badge&logo=weightsandbiases&logoColor=white)](https://wandb.ai/amit154154/sana-video-tomjerry)
 
 - Start from **base SANA-Video 2B**  
 - Freeze everything except **LoRA adapters on all linear layers in the diffusion transforme**  
