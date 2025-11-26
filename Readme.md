@@ -26,18 +26,21 @@ The base model is originally trained for higher resolutions (e.g. 480p), so its 
 
 #### Key Hyperparameters
 
-| Component          | Value                                  |
-|--------------------|----------------------------------------|
-| Base model         | `SANA-Video_2B_480p_diffusers`         |
-| Resolution         | 224 × 224                              |
-| Batch size         | 8                                      |
-| Optimizer          | AdamW / AdamW8bit (LoRA params only)   |
-| Learning rate      | 2e-4                                   |
-| LoRA rank          | 16                                     |
-| LoRA alpha         | 32                                     |
-| LoRA dropout       | 0.1                                    |
-| Training objective | Flow Matching (velocity prediction)    |
-| Steps              | 10,000                                 |
+| Component          | Value                                |
+|--------------------|--------------------------------------|
+| Base model         | `SANA-Video_2B_480p_diffusers`       |
+| Resolution         | 224 × 224                            |
+| Batch size         | 8                                    |
+| Optimizer          | AdamW / AdamW8bit (LoRA params only) |
+| Learning rate      | 2e-4                                 |
+| LoRA rank          | 16                                   |
+| LoRA alpha         | 32                                   |
+| LoRA dropout       | 0.1                                  |
+| Training objective | Flow Matching (velocity prediction)  |
+| Steps              | 10,000                               |
+| clip length        | 81 frames                            |
+
+
 
 ---
 
