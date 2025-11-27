@@ -26,12 +26,13 @@ At a high level:
     width="1024"
   />
 </p>
-> **Note – generated, approximate diagram.**  
+
+> 📝 **Note**  
 > This illustration was generated using nano banaֿ and is a slightly idealized view of the method. A few things are not strictly accurate:
-> - LoRA is applied **only to the Sana 1.5 transformer**
-> - The SigLIP image embedding and scalar zoom value are going to two diffrent mlp mappers and then  appended as two seperate tokens to the already cached text encoding(sometimes object text embedding, sometimes class).
+> - LoRA is applied **only to the Sana 1.5 transformer**.
+> - The SigLIP image embedding and scalar zoom value are mapped by two different MLPs and then appended as **two separate tokens** to the already cached text encoding (sometimes an object-level text embedding, sometimes a class prompt).
 > - GLB rendering happens **offline** to build a dataset of multi-zoom images; the diffusion model never sees raw GLB assets directly at train or inference time.
-> - the generated is one image, the idea is inputed a zero zoom object and a zoom target(and optional description) generated the object in target zoom
+> - The model generates **one image per call**: you input a zero-zoom object and a target zoom (plus optional description), and it generates the object at the requested zoom.
 
 1. **Offline GLB rendering**  
    - Render each GLB object at multiple zoom levels (`zoom_0 … zoom_N`) to build a 2D dataset.
@@ -136,10 +137,7 @@ After the class-LoRA training, the next step was to test how much **text conditi
 - Same LoRA, **different prompts** for different scenarios.
 - Goal: see whether the model can respond to new text instructions **without losing** the learned Tom & Jerry style.
 
-All text-conditioned videos are collected under:
 
-
-#### Scenarios & Prompts
 
 | Full prompt | Summary to prompt | Video |
 |-------------|-------------------|-------|
@@ -148,6 +146,8 @@ All text-conditioned videos are collected under:
 | A retro slapstick 2D cartoon scene of a grey cat and small brown mouse chasing each other up and down a staircase in a big old mansion, Tom and Jerry style, bold outlines, muted vintage colors, dust clouds, stretched limbs, smooth looping motion. | Vertical staircase chase in an old mansion | ![Vertical chase](assets/tom_and_jerry_all_assets/fine_tuned_class_textcond/tomjerry_vertical_chase_oldbuilding_32420.gif) |
 | A vintage slapstick 2D cartoon scene of a grey cat chasing a small brown mouse in a colorful house, Tom and Jerry style, bold outlines, limited color palette, exaggerated expressions, smooth character motion. tom is eating a pizza. | Tom eating pizza indoors (object + action added) | ![Tom eating pizza](assets/tom_and_jerry_all_assets/fine_tuned_class_textcond/tomjerry_tom_eatingpizza_32420.gif) |
 | A vintage slapstick 2D cartoon scene of a grey cat being outsmarted by a small brown mouse in a sunny backyard, Tom and Jerry style, bold outlines, vibrant green grass and blue sky, exaggerated pranks, falling objects, smooth expressive animation. | Prank outside in a sunny backyard | ![Prank outside](assets/tom_and_jerry_all_assets/fine_tuned_class_textcond/tomjerry_prank_outside_32420.gif) |
+> 📝 **Note**  
+> All text-conditioned videos are generated using the same seed (`32420`).
 
 ### Metrics & Evaluation (Template)
 
