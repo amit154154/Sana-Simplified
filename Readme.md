@@ -6,6 +6,7 @@ It currently includes **prototype code**, **one-off experiments**, and **work-in
 
 
 ## Sana 1.5 + SigLIP: img2img with Zoom Controller
+[![Hugging Face – sana1.5_siglipzoom](https://img.shields.io/badge/HuggingFace-sanavideo--tomjerry--lora--r16--v1-ffcc4d?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/AmitIsraeli/sana1.5_siglipzoom_glb_step30000)  
 
 This experiment turns **Sana 1.5** into an **img2img model with a continuous zoom controller**, driven by **SigLIP** image embeddings.
 
