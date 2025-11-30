@@ -50,16 +50,15 @@
         }
 
         header {
-            padding: 20px 22px 28px;
-            border-radius: 24px;
+            padding: 14px 18px 18px; /* was 20 / 22 / 28 */
+            border-radius: 20px;
             background: radial-gradient(circle at top left, #252b4f 0, #101426 45%, #050716 100%);
             box-shadow: var(--shadow);
             border: 1px solid rgba(255, 255, 255, 0.06);
-            position: sticky;
-            top: 0;
+            position: static;
             z-index: 10;
-            backdrop-filter: blur(18px);
-            margin-bottom: 28px;
+            backdrop-filter: blur(14px);
+            margin-bottom: 18px; /* was 28px */
         }
 
         .header-top {
@@ -71,12 +70,19 @@
         }
 
         .title-group h1 {
-            font-size: 1.9rem;
+            font-size: 1.6rem; /* smaller */
             letter-spacing: 0.03em;
             margin: 0;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+        }
+
+        .header-subtitle {
+            font-size: 0.9rem; /* smaller */
+            color: var(--muted);
+            margin: 4px 0 0; /* tighter */
+            max-width: 680px;
         }
 
         .title-pill {
@@ -89,13 +95,6 @@
             letter-spacing: 0.08em;
             color: var(--muted);
             background: rgba(0, 0, 0, 0.3);
-        }
-
-        .header-subtitle {
-            font-size: 0.96rem;
-            color: var(--muted);
-            margin: 6px 0 0;
-            max-width: 760px;
         }
 
         .header-actions {
