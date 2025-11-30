@@ -3,22 +3,26 @@
 tomjerry_data.py
 
 1) Precompute SANA-Video latents for Tom & Jerry MP4s (cache builder).
-2) Provide a Dataset that reads cached latents for training.
+2) Provide Datasets that read cached latents (and optionally text encodings) for training.
 
-- Uses one global prompt for the whole dataset (NOT stored per-item).
-- Dataset __getitem__ returns ONLY the latents tensor.
+- Uses one global prompt for the whole dataset in the original setup.
+- New: supports per-segment scene_description → text encodings via SanaVideoPipeline.
 
 Usage:
-  - First, run as a script to build / extend the cache (resumable):
+  - First, run as a script to build / extend the latent cache (resumable):
         python tomjerry_data.py
 
-  - Then, in your training code:
-        from tomjerry_data import TomJerryLatentDataset
+  - Then, to build text encodings from your CSV:
+        from tomjerry_data import build_text_embed_cache
+        build_text_embed_cache()  # after labels CSV exists
+
+  - For training:
+        from tomjerry_data import TomJerryLatentDataset, TomJerryLatentTextDataset
 """
 
 from __future__ import annotations
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Set, Tuple, Dict
 
 import torch
 from torch.utils.data import Dataset
@@ -27,6 +31,9 @@ from torchvision.io import read_video
 from tqdm import tqdm
 
 from diffusers import SanaVideoPipeline
+
+# ===== NEW: for text labels / CSV handling =====
+import pandas as pd
 
 
 # ==========================
@@ -55,9 +62,17 @@ LATENT_DTYPE  = torch.bfloat16   # store latents in bf16 to save disk
 # Batch size for VAE encoding (tune based on VRAM)
 CACHE_BATCH_SIZE = 4
 
+# ===== NEW: text label CSV + text-embed cache config =====
+TEXT_LABEL_CSV = CACHE_DIR / "tomjerry_scene_labels_qwen3vl_vllm.csv"
+TEXT_EMBED_DIR = CACHE_DIR / "text_embeds"
+TEXT_EMBED_DIR.mkdir(parents=True, exist_ok=True)
+
+TEXT_EMBED_DTYPE = torch.bfloat16
+TEXT_BATCH_SIZE = 32   # batch size for encoding prompts
+
 
 # ==========================
-# CACHE BUILDING
+# CACHE BUILDING (LATENTS)
 # ==========================
 
 def _load_vae_only() -> torch.nn.Module:
@@ -259,7 +274,7 @@ def build_latent_cache():
 
 
 # ==========================
-# DATASET
+# DATASETS (LATENTS ONLY)
 # ==========================
 
 class TomJerryLatentDataset(Dataset):
@@ -293,8 +308,199 @@ class TomJerryLatentDataset(Dataset):
 
 
 # ==========================
-# CLI ENTRY
+# NEW: TEXT EMBED CACHE BUILDER
+# ==========================
+
+def build_text_embed_cache(
+    labels_csv: Path = TEXT_LABEL_CSV,
+    text_cache_dir: Path = TEXT_EMBED_DIR,
+    batch_size: int = TEXT_BATCH_SIZE,
+):
+    """
+    Build per-clip text encodings from scene_description in labels_csv.
+
+    For each row in the CSV:
+      - clip_id, clip_pt_path, scene_description
+      - If text_<clip_id>.pt does NOT exist and clip_pt_path exists:
+          * encode scene_description with SanaVideoPipeline.encode_prompt
+          * save to text_cache_dir / f"text_{clip_id}.pt"
+
+    Saved file format:
+        {
+            "prompt_embeds": [1, L, D]  (bfloat16, CPU)
+        }
+    """
+    labels_csv = Path(labels_csv)
+    text_cache_dir = Path(text_cache_dir)
+    text_cache_dir.mkdir(parents=True, exist_ok=True)
+
+    if not labels_csv.exists():
+        raise RuntimeError(f"Labels CSV not found: {labels_csv}")
+
+    df = pd.read_csv(labels_csv)
+    if "clip_id" not in df.columns or "scene_description" not in df.columns:
+        raise RuntimeError(
+            f"CSV {labels_csv} must contain 'clip_id' and 'scene_description' columns."
+        )
+
+    # Optionally also check clip_pt_path column if present
+    has_pt_path = "clip_pt_path" in df.columns
+
+    # Collect rows that still need text embeds
+    todo_clip_ids: List[str] = []
+    todo_prompts: List[str] = []
+
+    print(f"Scanning CSV {labels_csv} for rows needing text embeddings...")
+    for _, row in df.iterrows():
+        clip_id = str(row["clip_id"])
+        scene_desc = str(row["scene_description"]).strip()
+        prompt_text = f"A classic Tom and jerry cartoon scene \n {scene_desc}"
+        if not scene_desc:
+            continue
+
+        text_path = text_cache_dir / f"text_{clip_id}.pt"
+        if text_path.exists():
+            continue  # already encoded
+
+        # Ensure the corresponding latent file exists
+        if has_pt_path:
+            pt_path = Path(row["clip_pt_path"])
+        else:
+            pt_path = CACHE_DIR / f"{clip_id}.pt"
+
+        if not pt_path.exists():
+            # Skip if we don't have latents for this clip
+            continue
+
+        todo_clip_ids.append(clip_id)
+        todo_prompts.append(scene_desc)
+
+    if not todo_clip_ids:
+        print("No new text embeddings to build. All up to date.")
+        return
+
+    print(f"Found {len(todo_clip_ids)} clips needing text embeddings.")
+
+    # Load SanaVideoPipeline for text encoding
+    print("Loading SanaVideoPipeline for text encoding...")
+    pipe = SanaVideoPipeline.from_pretrained(
+        MODEL_ID,
+        dtype=TEXT_EMBED_DTYPE,
+    )
+    pipe.to(DEVICE)
+
+    # We only need the text encoder for this job; keep the rest but it's fine
+    pipe.vae.to("cpu")
+    pipe.transformer.to("cpu")
+    torch.cuda.empty_cache()
+
+    # Batching over prompts
+    for i in tqdm(range(0, len(todo_prompts), batch_size), desc="Encoding text prompts"):
+        batch_prompts = todo_prompts[i : i + batch_size]
+        batch_clip_ids = todo_clip_ids[i : i + batch_size]
+
+        with torch.no_grad():
+            # encode_prompt returns (prompt_embeds, pooled, text_encoder_hidden_states, ...)
+            # In your training code you used [0], so we keep the same.
+            prompt_embeds = pipe.encode_prompt(
+                prompt=batch_prompts,
+                negative_prompt=None,
+                num_videos_per_prompt=1,
+                do_classifier_free_guidance=False,
+                device=DEVICE,
+            )[0]  # [B, L, D]
+
+        prompt_embeds = prompt_embeds.to(TEXT_EMBED_DTYPE).cpu()
+
+        for j, clip_id in enumerate(batch_clip_ids):
+            emb = prompt_embeds[j].unsqueeze(0)  # [1, L, D]
+            out_path = text_cache_dir / f"text_{clip_id}.pt"
+            torch.save({"prompt_embeds": emb}, out_path)
+
+    # Clean up
+    pipe.to("cpu")
+    torch.cuda.empty_cache()
+
+    print(f"Done. Text embeddings written to: {text_cache_dir}")
+
+
+# ==========================
+# NEW: DATASET WITH LATENTS + TEXT EMBEDS
+# ==========================
+
+class TomJerryLatentTextDataset(Dataset):
+    """
+    Dataset over cached Tom & Jerry latents + per-clip text embeddings.
+
+    - Expects:
+        CACHE_DIR / clip_XXXXXX.pt
+        TEXT_EMBED_DIR / text_clip_XXXXXX.pt
+
+    - Only keeps clips that have BOTH files present.
+
+    __getitem__ returns:
+        {
+            "latents":       [C, F, H', W'],   (dtype = self.dtype)
+            "prompt_embeds": [1, L, D],       (dtype = self.dtype)
+        }
+    """
+
+    def __init__(
+        self,
+        cache_dir: Path = CACHE_DIR,
+        text_cache_dir: Path = TEXT_EMBED_DIR,
+        dtype: torch.dtype = torch.bfloat16,
+    ):
+        self.cache_dir = Path(cache_dir)
+        self.text_cache_dir = Path(text_cache_dir)
+        self.dtype = dtype
+
+        latent_files = sorted(self.cache_dir.glob("clip_*.pt"))
+        if not latent_files:
+            raise RuntimeError(f"No cached clips found in {self.cache_dir}")
+
+        self.latent_files: List[Path] = []
+        self.text_files: List[Path] = []
+
+        for lf in latent_files:
+            clip_id = lf.stem  # "clip_000123"
+            tf = self.text_cache_dir / f"text_{clip_id}.pt"
+            if tf.exists():
+                self.latent_files.append(lf)
+                self.text_files.append(tf)
+
+        if not self.latent_files:
+            raise RuntimeError(
+                f"No overlapping latents+text found in {self.cache_dir} and {self.text_cache_dir}"
+            )
+
+        print(
+            f"TomJerryLatentTextDataset: using {len(self.latent_files)} clips "
+            f"with both latents and text embeddings."
+        )
+
+    def __len__(self) -> int:
+        return len(self.latent_files)
+
+    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+        lat_path = self.latent_files[idx]
+        txt_path = self.text_files[idx]
+
+        lat_data = torch.load(lat_path, map_location="cpu")
+        latents = lat_data["latents"].to(self.dtype)  # [C, F, H', W']
+
+        txt_data = torch.load(txt_path, map_location="cpu")
+        prompt_embeds = txt_data["prompt_embeds"].to(self.dtype)  # [1, L, D]
+
+        return {
+            "latents": latents,
+            "prompt_embeds": prompt_embeds,
+        }
+
+
+# ==========================
+# CLI ENTRY (latents only)
 # ==========================
 
 if __name__ == "__main__":
-    build_latent_cache()
+    build_text_embed_cache()

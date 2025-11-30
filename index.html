@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>SANA-Video Tom & Jerry — Research Log</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+    <style>
+        :root {
+            --bg: #050716;
+            --bg-alt: #0c1022;
+            --card-bg: #101426;
+            --text: #f4f4ff;
+            --muted: #a3a8c2;
+            --accent: #ffcc4d;
+            --accent-soft: rgba(255, 204, 77, 0.08);
+            --border: #282c44;
+            --badge-bg: #16192c;
+            --shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+            --radius-lg: 18px;
+            --radius-pill: 999px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+            "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top, #141a33 0, #050716 60%);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .page {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 32px 20px 80px;
+        }
+
+        header {
+            padding: 20px 22px 28px;
+            border-radius: 24px;
+            background: radial-gradient(circle at top left, #252b4f 0, #101426 45%, #050716 100%);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(18px);
+            margin-bottom: 28px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .title-group h1 {
+            font-size: 1.9rem;
+            letter-spacing: 0.03em;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .title-pill {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: var(--radius-pill);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .header-subtitle {
+            font-size: 0.96rem;
+            color: var(--muted);
+            margin: 6px 0 0;
+            max-width: 760px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .primary-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: var(--radius-pill);
+            border: 1px solid rgba(0, 0, 0, 0.4);
+            background: var(--accent);
+            color: #1c1604;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.65);
+        }
+
+        .primary-btn:hover {
+            text-decoration: none;
+            filter: brightness(1.05);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .primary-btn span {
+            font-size: 0.9rem;
+        }
+
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 18px;
+        }
+
+        .nav-link {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--muted);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            text-decoration: none;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        section {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 22px 22px 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        section + section {
+            margin-top: 4px;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        section h2 {
+            font-size: 1.4rem;
+            margin: 0 0 10px;
+        }
+
+        section h3 {
+            font-size: 1.05rem;
+            margin: 14px 0 6px;
+            color: #e0e2ff;
+        }
+
+        section p {
+            font-size: 0.96rem;
+            line-height: 1.65;
+            color: var(--muted);
+            margin: 6px 0;
+        }
+
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0 4px;
+        }
+
+        .badge {
+            background: var(--badge-bg);
+            border-radius: var(--radius-pill);
+            padding: 4px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .note {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px dashed rgba(255, 255, 255, 0.28);
+            background: var(--accent-soft);
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .note strong {
+            color: var(--accent);
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr);
+            gap: 22px;
+            align-items: flex-start;
+        }
+
+        @media (max-width: 900px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: left;
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        tbody tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.18);
+        }
+
+        code {
+            font-family: "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono",
+            "Courier New", monospace;
+            font-size: 0.86rem;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #050714;
+            border-radius: 12px;
+            padding: 12px 14px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+        }
+
+        .figure-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+            gap: 20px;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 900px) {
+            .figure-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        figure {
+            margin: 0;
+        }
+
+        figure img {
+            max-width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            display: block;
+        }
+
+        figure figcaption {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .gif-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-top: 14px;
+        }
+
+        /* tuned layout specifically for the text-conditioned grid */
+        .gif-grid.text-cond-grid {
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 22px;
+        }
+
+        .gif-card {
+            background: #050816;
+            border-radius: 14px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .gif-card img {
+            width: 100%;
+            border-radius: 10px;
+            display: block;
+        }
+
+        .gif-meta {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .summary-tag {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--accent);
+            margin-bottom: 2px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .toggle-prompt-btn {
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.45);
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+        }
+
+        .toggle-prompt-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .toggle-prompt-btn span {
+            font-size: 0.9rem;
+        }
+
+        .thought-bubble-wrapper {
+            margin-top: 14px;
+        }
+
+        .thought-bubble {
+            position: relative;
+            margin-top: 10px;
+            padding: 16px 16px 14px;
+            border-radius: 20px;
+            background: radial-gradient(circle at top left, #2a2f55 0, #14182e 40%, #050716 100%);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+        }
+
+        .thought-bubble::before,
+        .thought-bubble::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #2b3059 0, #101426 60%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .thought-bubble::before {
+            width: 16px;
+            height: 16px;
+            bottom: -8px;
+            left: 42px;
+        }
+
+        .thought-bubble::after {
+            width: 10px;
+            height: 10px;
+            bottom: -18px;
+            left: 30px;
+        }
+
+        .thought-bubble-label {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--accent);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .thought-bubble-label span {
+            font-size: 0.95rem;
+        }
+
+        .thought-bubble pre {
+            margin: 0;
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 0.82rem;
+        }
+
+        .thought-bubble code {
+            background: transparent;
+            padding: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .failure-nav {
+            margin-top: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .failure-btn {
+            padding: 6px 12px;
+            border-radius: var(--radius-pill);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            cursor: pointer;
+        }
+
+        .failure-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .failure-btn.active {
+            background: var(--accent);
+            color: #1c1604;
+            border-color: rgba(0, 0, 0, 0.6);
+        }
+
+        .failure-cases {
+            margin-top: 8px;
+        }
+
+        .failure-case {
+            display: none;
+        }
+
+        .failure-case.active {
+            display: block;
+        }
+
+        .label-column {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .label-block {
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .label-block.error {
+            border-color: rgba(255, 120, 120, 0.9);
+            background: radial-gradient(circle at top left, rgba(130, 20, 20, 0.85) 0, rgba(40, 10, 20, 0.9) 40%, rgba(5, 7, 22, 0.95) 100%);
+            box-shadow: 0 0 0 1px rgba(255, 100, 100, 0.4), 0 14px 30px rgba(0, 0, 0, 0.65);
+        }
+
+        .label-heading {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .label-heading.error {
+            color: #ff8080;
+        }
+
+        .label-block p {
+            margin: 0;
+            font-size: 0.86rem;
+            line-height: 1.5;
+        }
+
+        .failure-video img,
+        .failure-video video {
+            max-width: 100%;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            display: block;
+        }
+
+        .failure-video figcaption {
+            margin-top: 10px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: 0.82rem;
+            color: var(--muted);
+            line-height: 1.5;
+            position: relative;
+            padding: 20px 14px 10px 40px; /* extra top/left padding so label and icon don’t overlap the text */
+        }
+
+        .failure-video figcaption::before {
+            content: "⚠";
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .failure-video figcaption::after {
+            content: "Failure note";
+            position: absolute;
+            left: 40px;
+            top: 6px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--accent);
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <header>
+        <div class="header-top">
+            <div class="title-group">
+                <h1>
+                    SANA-Video × Tom & Jerry
+                    <span class="title-pill">Research Log</span>
+                </h1>
+                <p class="header-subtitle">
+                    Fine-tuning <strong>SANA-Video 2B</strong> toward efficient,
+                    low-budget Tom &amp; Jerry–style videos at low resolution on consumer GPUs.
+                </p>
+            </div>
+            <div class="header-actions">
+                <a
+                        class="primary-btn"
+                        href="https://github.com/amit154154/Sana-Simplified"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                >
+                    <span>↗</span>
+                    <span>View project on GitHub</span>
+                </a>
+            </div>
+        </div>
+
+        <nav>
+            <a class="nav-link" href="#overview">Overview</a>
+            <a class="nav-link" href="#training-setup">V1 – Class-Only Training</a>
+            <a class="nav-link" href="#hyperparams">V1 Hyperparameters</a>
+            <a class="nav-link" href="#class-prompt">V1 Class Prompt</a>
+            <a class="nav-link" href="#progression">V1 Checkpoint Progression</a>
+            <a class="nav-link" href="#text-cond">V1 Text-Conditioned Experiments</a>
+            <a class="nav-link" href="#v2-description_dataset_creation">V2 – Scene Dataset</a>
+            <a class="nav-link" href="#v2-dataset_creation_failure">V2 – Labeling Failures</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Overview -->
+        <section id="overview">
+            <div class="section-label">Experiment</div>
+            <h2>Project Overview</h2>
+
+            <div class="two-col">
+                <div>
+                    <h3>Goal</h3>
+                    <p>
+                        The core goal of this project is to generate <strong>controlled Tom &amp; Jerry–style
+                        videos</strong>
+                        on <strong>consumer GPUs</strong> in a <strong>reasonable amount of time</strong>, instead of
+                        needing giant lab hardware or overnight sampling for every clip.
+                    </p>
+                    <p>
+                        The model of choice is <strong>SANA-Video 2B</strong>, a recent
+                        <strong>efficient text-to-video diffusion model</strong> that uses
+                        flow-matching training, a relatively compact <code>2B</code>-parameter transformer,
+                        and a video-optimized VAE. This experiment bends that general model toward a very specific
+                        corner of style space:
+                        <em>classic Tom &amp; Jerry cartoons</em>, with readable motion and
+                        consistent characters, while still keeping text control alive.
+                    </p>
+
+                    <h3>Resolution vs Efficiency Tradeoff</h3>
+                    <p>
+                        Even though SANA-Video is relatively efficient, running it at its native
+                        <strong>480p-ish</strong> resolution is still heavy on a single 12–24&nbsp;GB GPU,
+                        especially if we want long clips, no distilled or pruned model(for now (: ), and ~50 inference
+                        steps.
+                    </p>
+                    <p>
+                        To make the project actually usable on normal hardware, the first accepted
+                        trade-off is <strong>resolution for efficiency and memory</strong>. Instead of
+                        generating full 480p (the base training resolution), this experiment locks the model to <code>224×224</code>
+                        and focuses on <strong>style, motion, and controllability</strong> rather than pure sharpness.
+                    </p>
+
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Setting</th>
+                            <th>Resolution</th>
+                            <th>Latent shape<br/>(C × T × H × W)</th>
+                            <th>VAE encode+decode<br/>(per 81-frame clip)</th>
+                            <th>Diffusion step time<br/>(per step)</th>
+                            <th>Peak VRAM<br/>(approx.)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Native SANA-Video</td>
+                            <td>~480p (e.g. 832×480)</td>
+                            <td><code>4 × 81 × 60 × 104</code></td>
+                            <td>TBD</td>
+                            <td>TBD</td>
+                            <td>TBD</td>
+                        </tr>
+                        <tr>
+                            <td>Tom &amp; Jerry setup</td>
+                            <td><code>224×224</code></td>
+                            <td><code>4 × 81 × 28 × 28</code></td>
+                            <td>TBD</td>
+                            <td>TBD</td>
+                            <td>TBD</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="note">
+                        <strong>Benchmarks:</strong> these reference numbers were measured on a L40 aws instance with
+                        bf16 model
+                    </div>
+
+                </div>
+
+                <figure>
+                    <img
+                            src="assets/tom_and_jerry_all_assets/tomjerry_video_class_lora16_seed69420_cfg4/tomjerry_lora_step010000_seed69420.gif"
+                            alt="Tom & Jerry LoRA sample at 10k steps (seed 69420)"
+                    />
+                    <figcaption>
+                        Sample frame from the LoRA-tuned model at 10k steps. Same seed and
+                        prompt as the base model; only the LoRA weights change.
+                    </figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Training Setup -->
+        <section id="training-setup">
+            <div class="section-label">V1 — Class-Only LoRA</div>
+            <h2>V1: Class-Only Training Run</h2>
+
+            <div class="badges">
+                <a
+                        class="badge"
+                        href="https://huggingface.co/AmitIsraeli/sanavideo-tomjerry-lora-r16-v1"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                >
+                    <img
+                            src="https://img.shields.io/badge/HuggingFace-sanavideo--tomjerry--lora--r16--v1-ffcc4d?style=for-the-badge&logo=huggingface&logoColor=black"
+                            alt="Hugging Face – sanavideo-tomjerry-lora-r16-v1"
+                    />
+                </a>
+                <a
+                        class="badge"
+                        href="https://wandb.ai/amit154154/sana-video-tomjerry"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                >
+                    <img
+                            src="https://img.shields.io/badge/Weights_&_Biases-Tom_%26_Jerry%20Runs-2c8ebb?style=for-the-badge&logo=weightsandbiases&logoColor=white"
+                            alt="Weights & Biases – Tom & Jerry runs"
+                    />
+                </a>
+            </div>
+
+            <p>
+                This first pass is a <strong>V1 baseline</strong>: treat the entire Tom &amp; Jerry world as a
+                <strong>single class</strong>, and adapt only the diffusion transformer with LoRA while the rest
+                of SANA-Video stays frozen (and in practice is never loaded into GPU memory). The goal is to see
+                how far we can push the style at <code>224×224</code> while still keeping some of the original
+                text-conditioning behaviour alive.
+            </p>
+            <p>
+                LoRA is used instead of full fine-tuning for practicality and speed: it is
+                parameter-efficient, easy to swap in and out, and often reaches quality that is comparable to
+                a fully fine-tuned model. For a deeper dive into how LoRA compares to full fine-tuning and why
+                “LoRA everywhere” (not just on attention layers) can work well, see the
+                <a href="https://thinkingmachines.ai/blog/lora/" target="_blank" rel="noopener noreferrer">
+                    <em>“LoRA Without Regret”</em>
+                </a>
+                blog post.
+            </p>
+
+            <ul>
+                <li>Start from <strong>base SANA-Video 2B</strong> (<code>SANA-Video_2B_480p_diffusers</code>).</li>
+                <li>Freeze everything except <strong>LoRA adapters on all linear layers</strong> in the diffusion
+                    transformer.
+                </li>
+                <li>Train with a <strong>single class prompt</strong> describing the Tom &amp; Jerry universe.</li>
+                <li>Resolution: <strong>224×224</strong>.</li>
+                <li>
+                    Dataset: curated Tom &amp; Jerry-style clips (resized + cleaned), with ~16k precomputed latents
+                    corresponding to roughly 5&nbsp;second clips.
+                </li>
+            </ul>
+
+            <div class="note">
+                <strong>Why all linear layers?</strong> Inspired by
+                <a href="https://thinkingmachines.ai/blog/lora/" target="_blank" rel="noopener noreferrer">
+                    “LoRA Without Regret”
+                </a>, LoRA applied to <em>all</em> linear layers in the transformer often gives better adaptation
+                than limiting it only to attention projections, while still keeping the number of trainable
+                parameters small.
+            </div>
+
+            <!-- Hyperparameters -->
+            <section id="hyperparams">
+                <div class="section-label">Config</div>
+                <h2>Key Hyperparameters</h2>
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Value</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Base model</td>
+                        <td><code>SANA-Video_2B_480p_diffusers</code></td>
+                    </tr>
+                    <tr>
+                        <td>Resolution</td>
+                        <td><code>224 × 224</code></td>
+                    </tr>
+                    <tr>
+                        <td>Clip length</td>
+                        <td><code>81</code> frames</td>
+                    </tr>
+                    <tr>
+                        <td>Batch size</td>
+                        <td><code>8</code></td>
+                    </tr>
+                    <tr>
+                        <td>Optimizer</td>
+                        <td>AdamW8bit (LoRA parameters only)</td>
+                    </tr>
+                    <tr>
+                        <td>Learning rate</td>
+                        <td><code>2e-4</code></td>
+                    </tr>
+                    <tr>
+                        <td>LoRA rank</td>
+                        <td><code>16</code></td>
+                    </tr>
+                    <tr>
+                        <td>LoRA alpha</td>
+                        <td><code>32</code></td>
+                    </tr>
+                    <tr>
+                        <td>LoRA dropout</td>
+                        <td><code>0.1</code></td>
+                    </tr>
+                    <tr>
+                        <td>Training objective</td>
+                        <td>Flow Matching (velocity prediction)</td>
+                    </tr>
+                    <tr>
+                        <td>Steps</td>
+                        <td><code>10k</code></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Class Prompt -->
+            <section id="class-prompt">
+                <div class="section-label">Style Anchor</div>
+                <h2>Class Prompt</h2>
+
+                <p>
+                    The first run uses a single class prompt as the main style anchor for
+                    the whole training:
+                </p>
+
+                <pre><code>A vintage slapstick 2D cartoon scene of a grey cat chasing a small brown mouse in a colorful house, Tom and Jerry style, bold outlines, limited color palette, exaggerated expressions, smooth character motion.</code></pre>
+
+                <div class="note">
+                    <strong>Why a single prompt?</strong> It deliberately conflates many
+                    things—character identities, environment, motion, and style—so LoRA
+                    learns a dense “Tom &amp; Jerry prior” before we start testing
+                    text-conditioning flexibility, also we have unlabeled tom and jerry clips.
+                </div>
+            </section>
+
+            <!-- Checkpoint Progression -->
+            <section id="progression">
+                <div class="section-label">Training Log</div>
+                <h2>Checkpoint Progression (Same Seed &amp; Prompt)</h2>
+
+                <p>
+                    Every few steps, a clip is generated with a fixed seed and CFG. This
+                    makes it easy to see how the LoRA gradually steers SANA-Video from
+                    its generic prior into the Tom &amp; Jerry regime.
+                </p>
+
+                <div class="figure-row">
+                    <figure>
+                        <img
+                                src="assets/tom_and_jerry_all_assets/tomjerry_video_class_lora16_seed69420_cfg4/tomjerry_base_seed69420.gif"
+                                alt="Base SANA-Video sample (no LoRA)"
+                        />
+                        <figcaption>Base SANA-Video 2B @ 224×224 (seed 69420)</figcaption>
+                    </figure>
+
+                    <div class="gif-grid">
+                        <div class="gif-card">
+                            <img
+                                    src="assets/tom_and_jerry_all_assets/tomjerry_video_class_lora16_seed69420_cfg4/tomjerry_lora_step000100_seed69420.gif"
+                                    alt="LoRA step 100"
+                            />
+                            <div class="gif-meta">
+                                <div class="summary-tag">Step 100</div>
+                                Still messy; style only slightly nudged away from the base.
+                            </div>
+                        </div>
+                        <div class="gif-card">
+                            <img
+                                    src="assets/tom_and_jerry_all_assets/tomjerry_video_class_lora16_seed69420_cfg4/tomjerry_lora_step001000_seed69420.gif"
+                                    alt="LoRA step 1,000"
+                            />
+                            <div class="gif-meta">
+                                <div class="summary-tag">Step 1k</div>
+                                Clearer outlines, more cartoony color palette starting to appear.
+                            </div>
+                        </div>
+                        <div class="gif-card">
+                            <img
+                                    src="assets/tom_and_jerry_all_assets/tomjerry_video_class_lora16_seed69420_cfg4/tomjerry_lora_step005000_seed69420.gif"
+                                    alt="LoRA step 5,000"
+                            />
+                            <div class="gif-meta">
+                                <div class="summary-tag">Step 5k</div>
+                                Motion and silhouettes look much closer to classic TV-era animation; Tom is a lot easier
+                                to
+                                read.
+                            </div>
+                        </div>
+                        <div class="gif-card">
+                            <img
+                                    src="assets/tom_and_jerry_all_assets/tomjerry_video_class_lora16_seed69420_cfg4/tomjerry_lora_step010000_seed69420.gif"
+                                    alt="LoRA step 10,000"
+                            />
+                            <div class="gif-meta">
+                                <div class="summary-tag">Step 10k</div>
+                                Style mostly locked in; further training starts to trade diversity for fidelity.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note">
+                    <strong>All clips above:</strong> same seed (<code>69420</code>),
+                    same prompt (<code>class prompt</code>), same CFG (<code>6</code>).
+                    The only thing that changes across columns is the LoRA checkpoint.
+                    Worth noting: the <em>baseline</em> SANA-Video samples at this
+                    resolution are often even weaker than the one shown here — the model
+                    was never trained natively at <code>224×224</code>, and it shows.
+                </div>
+            </section>
+
+            <!-- Text-Conditioned Experiments -->
+            <section id="text-cond">
+                <div class="section-label">Text Control</div>
+                <h2>Text-Conditioned Experiments</h2>
+
+                <p>
+                    After the class-LoRA run converges, the next question is:
+                    <strong>how much text-conditioning power is left?</strong>
+                    To test this, we reuse the same LoRA weights but vary the prompts.
+                </p>
+
+                <p>
+                    All of the clips below share:
+                </p>
+                <ul>
+                    <li>The same LoRA checkpoint.</li>
+                    <li>The same seed (<code>32420</code>).</li>
+                    <li>Identical sampling settings (steps, CFG, etc.).</li>
+                </ul>
+
+                <div class="gif-grid text-cond-grid">
+                    <div class="gif-card">
+                        <img
+                                src="assets/tom_and_jerry_all_assets/fine_tuned_class_textcond/tomjerry_classcond_seed32420.gif"
+                                alt="Class baseline"
+                        />
+                        <div class="gif-meta">
+                            <div class="summary-tag">Class baseline</div>
+                            Same style anchor as the training prompt; sanity check for the LoRA behavior.
+                        </div>
+                    </div>
+
+                    <div class="gif-card">
+                        <img
+                                src="assets/tom_and_jerry_all_assets/fine_tuned_class_textcond/tomjerry_at_night_seed32420.gif"
+                                alt="Night living room sneaking"
+                        />
+                        <div class="gif-meta">
+                            <div class="summary-tag">Night living room</div>
+                            <strong>Tests lighting changes and sneaking motion</strong> in a cozy living room.
+                        </div>
+                    </div>
+
+                    <div class="gif-card">
+                        <img
+                                src="assets/tom_and_jerry_all_assets/fine_tuned_class_textcond/tomjerry_vertical_chase_oldbuilding_32420.gif"
+                                alt="Vertical chase in old mansion"
+                        />
+                        <div class="gif-meta">
+                            <div class="summary-tag">Vertical staircase chase</div>
+                            Same style, different geometry and motion (up/down motion in an old mansion stairwell).
+                        </div>
+                    </div>
+
+                    <div class="gif-card">
+                        <img
+                                src="assets/tom_and_jerry_all_assets/fine_tuned_class_textcond/tomjerry_tom_eatingpizza_32420.gif"
+                                alt="Tom eating pizza"
+                        />
+                        <div class="gif-meta">
+                            <div class="summary-tag">Tom eating pizza</div>
+                            Adds an explicit object + action (pizza) on top of the base tom and jerry prompt setup.
+                        </div>
+                    </div>
+
+                    <div class="gif-card">
+                        <img
+                                src="assets/tom_and_jerry_all_assets/fine_tuned_class_textcond/tomjerry_prank_outside_32420.gif"
+                                alt="Prank outside"
+                        />
+                        <div class="gif-meta">
+                            <div class="summary-tag">Backyard prank</div>
+                            Moves the scene outdoors to a sunny backyard with slapstick prank dynamics.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="note">
+                    <strong>Takeaway:</strong> Even after strong class-style tuning, the
+                    model still responds to changes in lighting, location, and simple
+                    action cues while keeping the Tom &amp; Jerry look.
+                    More systematic evaluation is still TODO; full prompts for each video are documented in the GitHub
+                    repo.
+                </div>
+            </section>
+
+            <!-- V2: Text-Aware Dataset & Training -->
+            <section id="v2-description_dataset_creation">
+                <div class="section-label">V2 — Scene-Based Generation</div>
+                <h2>V2: Scene Dataset &amp; Training</h2>
+
+                <p>
+                    V1 was intentionally simple: one global class prompt and a LoRA that
+                    “pulls” SANA-Video into the Tom &amp; Jerry style at <code>224×224</code>.
+                    In <strong>V2</strong>, the goal is to move beyond a single prompt while preserving
+                    as much control from the foundation model as possible, and to build a
+                    <strong>richer, text-aware scene dataset</strong> that the model can actually react to.
+                </p>
+
+                <h3>Dataset creation</h3>
+                <p>
+                    The idea is to extend the existing Tom &amp; Jerry latent cache with per-clip
+                    <strong>scene descriptions</strong>. Using recent advances in multi-modal,
+                    affordable models and efficient inference pipelines
+                    (continuous batching, KV-cache, <code>vLLM</code> in practice for more deatils explore this <a
+                        href="https://huggingface.co/blog/continuous_batching" target="_blank"
+                        rel="noopener noreferrer">
+                    <em>blog</em>
+                </a>), labeling a large
+                    dataset with detailed scene descriptions becomes realistic with reasonable
+                    engineering effort:
+                </p>
+
+                <ul>
+                    <li>Start from the same curated clips used in V1 (already resized &amp; cached as latents).</li>
+                    <li>Use <strong>Qwen3-VL-8B</strong> served via <strong>vLLM</strong> to auto-label each segment.
+                    </li>
+                    <li>Add a CSV/JSON file that stores one <code>text_prompt</code> per clip or segment.</li>
+                    <li>Encode these text prompts once and cache the embeddings alongside the video latents.</li>
+                </ul>
+
+                <h3>Scene description template &amp; labeling prompt</h3>
+                <p>
+                    Each segment is described with a structured <strong>scene card</strong>
+                    (environment, characters, props, action, camera). The same template is used
+                    as the base for all prompts fed into the VLM.
+                </p>
+
+                <div class="thought-bubble-wrapper">
+                    <button
+                            id="toggle-prompt-btn"
+                            class="toggle-prompt-btn"
+                            type="button"
+                            onclick="toggleLabelingPrompt()"
+                    >
+                        <span>💭</span>
+                        <span>Show labeling prompt</span>
+                    </button>
+
+                    <div id="labeling-prompt" class="thought-bubble hidden">
+                        <div class="thought-bubble-label">
+                            <span>💭</span>
+                            <span>Qwen3-VL-8B labeling prompt</span>
+                        </div>
+                        <pre><code>You are an expert animation director and prompt engineer.
+
+You are given a short video segment (about 3–6 seconds) showing a Tom and Jerry cartoon scene.
+Your job is to:
+1) Understand the scene (environment, characters, actions, style, camera).
+2) Return a structured description that can be used as a base prompt for a text-to-video model.
+
+Follow this exact output format and headings, and DO NOT add any extra sections:
+
+ENVIRONMENT:
+- Describe the location and setting (e.g. "inside a colorful living room", "in a sunny backyard").
+- Mention key background elements (walls, furniture, sky, ground, etc.).
+- Include mood / lighting (e.g. "warm lamp light", "bright midday sun", "dark night with moonlight").
+
+CHARACTERS:
+- List each main character separately.
+- For each: species/type, color, size, clothing/accessories, personality vibe.
+  (e.g. "a grey cat with white paws, energetic and mischievous").
+- If the character is Tom or Jerry, mention their names explicitly ("Tom", "Jerry").
+
+PROPS:
+- List important objects that are involved in the action or stand out visually.
+  (e.g. "sofa, table, pizza slice, ladder, flower pot").
+
+ACTION:
+- Describe what happens in the segment in 1–3 short sentences.
+- Focus on interactions between characters and props, and the main motion.
+  (e.g. "the cat chases the mouse around the table and almost slips on a rug").
+
+CAMERA &amp; FRAMING:
+- Describe the main camera view (e.g. "side view, medium-wide shot").
+- Mention if the camera is static or moving (panning, zooming, following the character, etc.).
+
+Write clearly, concisely, and keep everything in this exact structure.</code></pre>
+                    </div>
+                </div>
+
+                <div class="note">
+                    <strong>Idea:</strong> one Tom &amp; Jerry video segment → one rich scene card.
+                    Later, these cards become the text backbone for V2 training and for
+                    video → text → video experiments, also for future further control in the scene for
+                    constructor LLM to generate many scenes and connect them
+                </div>
+            </section>
+
+            <section id="v2-dataset_creation_failure">
+                <div class="section-label">V2 — Scene-Based Generation</div>
+                <h2>V2: Dataset Labeling Failure Modes</h2>
+
+                <p>
+                    Qwen3-VL is a very strong VLM, but when I used it to label the Tom &amp; Jerry dataset,
+                    several <strong>systematic failure modes</strong> kept showing up(it still mostly labeled correctly
+                    the scenes but I did notice those failures casses). Below are
+                    <strong>four representative cases</strong>, each showing the generated scene description on the left
+                    and the corresponding video on the right.
+                </p>
+
+                <div class="failure-nav">
+                    <button class="failure-btn active" type="button" onclick="showFailureCase(0)">1.
+                        Out-of-distribution
+                    </button>
+                    <button class="failure-btn" type="button" onclick="showFailureCase(1)">2. “Every cat is Tom”
+                    </button>
+                    <button class="failure-btn" type="button" onclick="showFailureCase(2)">3. Missed main gag</button>
+                    <button class="failure-btn" type="button" onclick="showFailureCase(3)">4. Hallucinated Tom &amp;
+                        Jerry
+                    </button>
+                </div>
+
+                <div class="failure-cases">
+                    <!-- Case 1: out of disturabution-->
+                    <div class="failure-case active">
+                        <h3>Failure case 1 — out of disturabution</h3>
+                        <div class="two-col">
+                            <div class="label-column">
+                                <div class="label-block">
+                                    <div class="label-heading">ENVIRONMENT</div>
+                                    <p>
+                                        - A simple, dark blue background with no detailed environment.<br>
+                                        - Mood: suspenseful and minimalist, with a focus on the characters and their
+                                        actions.
+                                    </p>
+                                </div>
+                                <div class="label-block error">
+                                    <div class="label-heading error">CHARACTERS</div>
+                                    <p>
+                                        - Tom: a white-outlined cat with an angry expression, large ears, and whiskers.
+                                        He
+                                        is the main character, appearing in all frames.<br>
+                                        - Jerry: a small brown mouse with a red nose and ears, running away from Tom. He
+                                        is
+                                        the secondary character. </p>
+                                </div>
+                                <div class="label-block">
+                                    <div class="label-heading">PROPS</div>
+                                    <p>
+                                        - A green rectangular object (possibly a mouse trap or block) that is initially
+                                        held
+                                        by Jerry and then falls to the ground.
+                                    </p>
+                                </div>
+                                <div class="label-block error">
+                                    <div class="label-heading error">ACTION</div>
+                                    <p>
+                                        - Jerry runs away from Tom, who is holding a green object. Jerry drops the
+                                        object,
+                                        which falls to the ground. Tom then looks down at the object, and the scene ends
+                                        with Tom listening intently.
+                                    </p>
+                                </div>
+                                <div class="label-block">
+                                    <div class="label-heading">CAMERA &amp; FRAMING</div>
+                                    <p>
+                                        - Static camera, medium shot, focused on the characters and their interaction.
+                                        The
+                                        camera does not move, maintaining a consistent view of the action.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <figure class="failure-video">
+                                <video
+                                        src="assets/tom_and_jerry_all_assets/dataset_v2_failures/decoded_clip_011873.mp4"
+                                        autoplay
+                                        loop
+                                        muted
+                                        playsinline
+                                ></video>
+                                <figcaption>
+                                    Out-of-distribution clip: the scene is abstract and sparse, but the model
+                                    hallucinates a full Tom &amp; Jerry chase with extra props and a wrong
+                                    interpretation
+                                    of the motion.
+                                </figcaption>
+                            </figure>
+                        </div>
+                    </div>
+
+                    <!-- Case 2: Cat = Tom -->
+                    <div class="failure-case">
+                        <h3>Failure case 2 — cat = Tom </h3>
+                        <div class="two-col">
+                            <div class="label-column">
+                                <div class="label-block error">
+                                    <div class="label-heading error">ENVIRONMENT</div>
+                                    <p>
+                                        - A brick wall next to a window ledge with a framed picture of roses.<br>
+                                        - The scene is set indoors, likely in a house, with warm, natural lighting
+                                        suggesting daytime.
+                                    </p>
+                                </div>
+                                <div class="label-block error">
+                                    <div class="label-heading error">CHARACTERS</div>
+                                    <p>
+                                        - Jerry: a small brown mouse, wearing a red bowtie, with a mischievous and sly
+                                        personality vibe.<br>
+                                        - Tom: a black and white cat, sitting atop a trash can, looking up with a wide,
+                                        grinning expression.
+
+                                    </p>
+                                </div>
+                                <div class="label-block">
+                                    <div class="label-heading">PROPS</div>
+                                    <p>
+                                        - A window ledge with a framed picture of roses.<br>
+                                        - A trash can.<br>
+                                        - Cardboard boxes and other debris around the trash can.
+                                    </p>
+                                </div>
+                                <div class="label-block">
+                                    <div class="label-heading">ACTION</div>
+                                    <p>
+                                        - Jerry is perched on the window ledge, looking down with a sly expression.<br>
+                                        - Tom is sitting on top of a trash can, looking up at Jerry with a wide,
+                                        grinning
+                                        expression, seemingly amused or about to pounce.
+                                    </p>
+                                </div>
+                                <div class="label-block">
+                                    <div class="label-heading">CAMERA &amp; FRAMING</div>
+                                    <p>
+                                        - The camera is positioned at a low angle, looking up at the characters as they
+                                        move
+                                        through the air.<br>
+                                        - The camera follows the action, panning slightly to keep both characters in
+                                        frame
+                                        as they move across the scene.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <figure class="failure-video">
+                                <video
+                                        src="assets/tom_and_jerry_all_assets/dataset_v2_failures/decoded_clip_007315.mp4"
+                                        autoplay
+                                        loop
+                                        muted
+                                        playsinline
+                                ></video>
+                                <figcaption>
+                                    “Every cat is Tom”: any vaguely cat-shaped character is labeled as Tom, sometimes
+                                    with Jerry added on top, even when the original design clearly differs.
+                                </figcaption>
+                            </figure>
+                        </div>
+                    </div>
+
+                    <!-- Case 3: missed action -->
+                    <div class="failure-case">
+                        <h3>Failure case 3 — missed main action</h3>
+                        <div class="two-col">
+                            <div class="label-column">
+                                <div class="label-block">
+                                    <div class="label-heading">ENVIRONMENT</div>
+                                    <p>
+                                        - A sunny, open golf course with vibrant green grass.<br>
+                                        - Background elements include a tree with a wooden bench under it, distant
+                                        trees,
+                                        and a clear blue sky.<br>
+                                        - Mood: Bright, cheerful, cartoonish midday lighting.
+                                    </p>
+                                </div>
+                                <div class="label-block">
+                                    <div class="label-heading">CHARACTERS</div>
+                                    <p>
+                                        - Tom: A grey cat with white paws and chest, wearing a white golf glove on his
+                                        right
+                                        paw. Personality vibe: Energetic, focused, and slightly comical in his attempt
+                                        at
+                                        golf.
+                                    </p>
+                                </div>
+                                <div class="label-block">
+                                    <div class="label-heading">PROPS</div>
+                                    <p>
+                                        - Golf clubs (one with a red grip, another with a blue grip), a white golf ball,
+                                        and
+                                        a wooden bench.
+                                    </p>
+                                </div>
+                                <div class="label-block error">
+                                    <div class="label-heading error">ACTION</div>
+                                    <p>
+                                        - Tom is attempting to play golf, swinging a club at a golf ball.<br>
+                                        - He loses his balance and falls backward, then quickly recovers and stands up,
+                                        still holding the club.
+                                    </p>
+                                </div>
+                                <div class="label-block">
+                                    <div class="label-heading">CAMERA &amp; FRAMING</div>
+                                    <p>
+                                        - Static side view, medium shot.<br>
+                                        - The camera remains fixed, capturing Tom’s full body and the immediate
+                                        surroundings.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <figure class="failure-video">
+                                <video
+                                        src="assets/tom_and_jerry_all_assets/dataset_v2_failures/decoded_clip_002747.mp4"
+                                        autoplay
+                                        loop
+                                        muted
+                                        playsinline
+                                ></video>
+                                <figcaption>
+                                    Missed main gag: the model gets the setting and characters right and notes that Tom
+                                    falls once, but completely skips the second hit and the golf club "job" that is the
+                                    core of the slapstick
+                                    joke.
+                                </figcaption>
+                            </figure>
+                        </div>
+                    </div>
+
+                    <!-- Case 4: missed action -->
+                    <div class="failure-case">
+                        <h3>Failure case 4 — insert tom and jerry</h3>
+                        <div class="two-col">
+                            <div class="label-column">
+                                <div class="label-block">
+                                    <div class="label-heading">ENVIRONMENT</div>
+                                    <p>
+                                        - Inside a simple room with light-colored walls and wooden floor.<br>
+                                        - A plain wall with a framed picture or mirror is visible in the background.<br>
+                                        - Warm, even lighting typical of classic cartoon animation.
+                                    </p>
+                                </div>
+                                <div class="label-block error">
+                                    <div class="label-heading error">CHARACTERS</div>
+                                    <p>
+                                        - Tom: a grey cat with white paws, wearing a red shirt, white shorts, and a
+                                        large
+                                        straw hat. He appears to be dancing or struggling with glee.<br>
+                                        - Jerry: a small brown mouse, wearing a red shirt and white shorts, also wearing
+                                        a
+                                        small red bow on his head. He is being carried or held by Tom.
+                                    </p>
+                                </div>
+                                <div class="label-block error">
+                                    <div class="label-heading error">PROPS</div>
+                                    <p>
+                                        - A large straw hat worn by Tom.<br>
+                                        - A long, thin stick or pole held by Tom, which he is using to balance or dance
+                                        with.
+                                    </p>
+                                </div>
+                                <div class="label-block error">
+                                    <div class="label-heading error">ACTION</div>
+                                    <p>
+                                        - Tom is energetically dancing or stumbling while holding Jerry in his arms.<br>
+                                        - Jerry is laughing and appears to be enjoying the chaos.<br>
+                                        - The scene transitions to Tom and Jerry suddenly breaking apart, with Jerry
+                                        running
+                                        away as Tom stumbles.
+                                    </p>
+                                </div>
+                                <div class="label-block">
+                                    <div class="label-heading">CAMERA &amp; FRAMING</div>
+                                    <p>
+                                        - Static medium shot, keeping both characters in frame throughout the
+                                        sequence.<br>
+                                        - The camera remains fixed, allowing the characters' movements to drive the
+                                        action.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <figure class="failure-video">
+                                <video
+                                        src="assets/tom_and_jerry_all_assets/dataset_v2_failures/decoded_clip_001807.mp4"
+                                        autoplay
+                                        loop
+                                        muted
+                                        playsinline
+                                ></video>
+                                <figcaption>
+                                    Hallucinated Tom &amp; Jerry: the original clip has different characters, but the
+                                    model
+                                    forces Tom and Jerry into the description and then invents matching actions to stay
+                                    self-consistent -> LLms with their self consistency ):
+                                </figcaption>
+                            </figure>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="note">
+                    <strong>Why this matters:</strong> these failure modes show where automatic labels need either
+                    better prompts, light post-filtering, stronger model, more frames per video.
+                </div>
+            </section>
+
+
+            <div class="footer">
+                Built as a living research log on top of
+                <a href="https://github.com/amit154154/Sana-Simplified" target="_blank" rel="noopener noreferrer">Sana-Simplified</a>.
+            </div>
+    </main>
+</div>
+</main>
+<script>
+    function toggleLabelingPrompt() {
+        const box = document.getElementById("labeling-prompt");
+        const btn = document.getElementById("toggle-prompt-btn");
+        const isHidden = box.classList.contains("hidden");
+
+        if (isHidden) {
+            box.classList.remove("hidden");
+            btn.innerHTML = "<span>\ud83d\udcad</span><span>Hide labeling prompt</span>";
+        } else {
+            box.classList.add("hidden");
+            btn.innerHTML = "<span>\ud83d\udcad</span><span>Show labeling prompt</span>";
+        }
+    }
+
+    function showFailureCase(index) {
+        const cases = document.querySelectorAll('.failure-case');
+        const buttons = document.querySelectorAll('.failure-btn');
+
+        cases.forEach((el, i) => {
+            if (i === index) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        });
+
+        buttons.forEach((btn, i) => {
+            if (i === index) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+</script>
+</body>
+</html>
