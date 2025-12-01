@@ -662,7 +662,8 @@
                         steps.
                     </p>
                     <p>
-                        To make the project actually usable on normal hardware, the first accepted
+                        To make the project actually usable on normal hardware and in acceptable training compute, the
+                        first accepted
                         trade-off is <strong>resolution for efficiency and memory</strong>. Instead of
                         generating full 480p (the base training resolution), this experiment locks the model to <code>224×224</code>
                         and focuses on <strong>style, motion, and controllability</strong> rather than pure sharpness.
@@ -676,25 +677,25 @@
                             <th>Latent shape<br/>(C × T × H × W)</th>
                             <th>VAE encode+decode<br/>(per 81-frame clip)</th>
                             <th>Diffusion step time<br/>(per step)</th>
-                            <th>Peak VRAM<br/>(approx.)</th>
+                            <th>Peak VRAM(when only transformer in memory)<br/></th>
                         </tr>
                         </thead>
-                        <tbody>
+                        <tbody>Avg time per iter:
                         <tr>
                             <td>Native SANA-Video</td>
                             <td>~480p (e.g. 832×480)</td>
-                            <td><code>4 × 81 × 60 × 104</code></td>
-                            <td>TBD</td>
-                            <td>TBD</td>
-                            <td>TBD</td>
+                            <td><code>16 x 21 × 60 × 104</code></td>
+                            <td>OOM</td>
+                            <td>~1577 ms</td>
+                            <td>6373.37 MiB</td>
                         </tr>
                         <tr>
                             <td>Tom &amp; Jerry setup</td>
                             <td><code>224×224</code></td>
-                            <td><code>4 × 81 × 28 × 28</code></td>
-                            <td>TBD</td>
-                            <td>TBD</td>
-                            <td>TBD</td>
+                            <td><code>16 x 21 × 28 × 28</code></td>
+                            <td>63 ms + 110 ms</td>
+                            <td>~243 ms</td>
+                            <td>4578.80 MiB</td>
                         </tr>
                         </tbody>
                     </table>
@@ -849,6 +850,7 @@
                     </tbody>
                 </table>
             </section>
+
 
             <!-- Class Prompt -->
             <section id="class-prompt">
@@ -1031,6 +1033,116 @@
                     repo.
                 </div>
             </section>
+            <!-- V0 Evaluation -->
+            <section id="eval-v0">
+                <div class="section-label">Evaluation</div>
+                <h2>V0: CFG Sweep Evaluation</h2>
+
+                <p>
+                    I know what you thinking... what are those flashes and blurines?
+                    until know while generating we used a set cfg = 6.0 which cuses theose weird
+                    distorations, usinge a
+                    <strong>100 ground-truth Tom &amp; Jerry segments</strong> we will
+                    generate 40 corresponding clips with the <strong>V1 LoRA</strong> at different CFG scales but same
+                    list of seeds,
+                    and compare each generated clip to its ground-truth counterpart.
+                </p>
+
+                <p>
+                    For each CFG setting, we compute:
+                </p>
+                <ul>
+                    <li><strong>SSIM ↑</strong> – structural similarity to the ground-truth frames.</li>
+                    <li><strong>PSNR ↑</strong> – per-frame signal-to-noise ratio.</li>
+                    <li><strong>LPIPS ↓</strong> – perceptual distance (AlexNet or VGG backbone).</li>
+                    <li><strong>FID ↓</strong> – frame-wise FID over all frames (Inception-V3 features).</li>
+                    <li><strong>tLPIPS ↓</strong> – temporal LPIPS between consecutive frames (motion smoothness).</li>
+                </ul>
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>CFG scale</th>
+                        <th># eval clips</th>
+                        <th>SSIM ↑</th>
+                        <th>PSNR ↑ (dB)</th>
+                        <th>LPIPS ↓</th>
+                        <th>FID ↓</th>
+                        <th>tLPIPS ↓</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Sana Video 2B Base</td>
+                        <td>6.0</td>
+                        <td>40</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                    </tr>
+                    <tr>
+                        <td>Tom &amp; Jerry LoRA (V1, r16)</td>
+                        <td>2.0</td>
+                        <td>40</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                    </tr>
+                    <tr>
+                        <td>Tom &amp; Jerry LoRA (V1, r16)</td>
+                        <td>2.5</td>
+                        <td>40</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                    </tr>
+                    <tr>
+                        <td>Tom &amp; Jerry LoRA (V1, r16)</td>
+                        <td>3</td>
+                        <td>40</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                    </tr>
+                    <tr>
+                        <td>Tom &amp; Jerry LoRA (V1, r16)</td>
+                        <td>4</td>
+                        <td>40</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                    </tr>
+                    <tr>
+                        <td>Tom &amp; Jerry LoRA (V1, r16)</td>
+                        <td>5</td>
+                        <td>40</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                        <td>TBD</td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="note">
+                    <strong>Protocol:</strong> all clips are generated at <code>224×224</code> with the same seed set
+                    and prompts as the held-out ground-truth segments. Metrics are averaged over all frames and all
+                    100 clips per CFG setting. Once the sweep is run, this table will be updated with the actual scores.
+                </div>
+            </section>
+
 
             <!-- V2: Text-Aware Dataset & Training -->
             <section id="v2-description_dataset_creation">
