@@ -626,6 +626,7 @@
             <a class="nav-link" href="#text-cond">V1 Text-Conditioned Experiments</a>
             <a class="nav-link" href="#v2-description_dataset_creation">V2 – Scene Dataset</a>
             <a class="nav-link" href="#v2-dataset_creation_failure">V2 – Labeling Failures</a>
+            <a class="nav-link" href="#future-work">Future Work</a>
         </nav>
     </header>
 
@@ -1549,6 +1550,7 @@ Write clearly, concisely, and keep everything in this exact structure.</code></p
                         </div>
                     </div>
 
+
                 </div>
 
                 <div class="note">
@@ -1557,6 +1559,46 @@ Write clearly, concisely, and keep everything in this exact structure.</code></p
                 </div>
             </section>
 
+
+            <section id="future-work">
+                <div class="section-label">Roadmap</div>
+                <h2>Future Work</h2>
+
+                <p>
+                    This is a living project and there are a bunch of directions I want to explore next.
+                    The bullets below are placeholders and will be updated as the project evolves.
+                </p>
+
+                <ul>
+                    <li>
+                        <strong>Resolution × CFG benchmarks:</strong>
+                        refine the evaluation protocol and run a full sweep across
+                         CFG scales, comparing <strong>V1 vs V2</strong> side-by-side on SSIM, FID, LPIPS,
+                        and temporal metrics.
+                    </li>
+                    <li>
+                        <strong>Motion-score conditioning:</strong>
+                        experiment with adding a motion score (e.g. Unimatch + VMAF, similar to how
+                        SANA-Video scores motion) as an extra token appended to the text conditioning,
+                        and train the model to respond to “more / less motion” controls.
+                    </li>
+                    <li>
+                        <strong>RL-style reward model:</strong>
+                        take inspiration from
+                        <a href="https://huggingface.co/papers/2511.21541" target="_blank" rel="noopener noreferrer">
+                            <em>Video Generation Models Are Good Latent Reward Models</em>
+                        </a>,
+                        clone a pruned copy of the video transformer as a latent reward model that scores
+                        “real vs fake” Tom &amp; Jerry clips, and use those scores in a lightweight RL loop
+                        to sharpen dynamics and reduce artifacts.
+                    </li>
+                </ul>
+
+                <div class="note">
+                    <strong>Placeholder:</strong> all items above are draft ideas. I will replace them with the real
+                    roadmap once more experiments are completed.
+                </div>
+            </section>
 
             <div class="footer">
                 Built as a living research log on top of
